@@ -172,6 +172,9 @@ def main():
         type=bool,
         default=False,
     )
+    parser.add_argument(
+        '--epoch', type=int, default=5, help='number of epochs'
+    )
     args = parser.parse_args()
 
     cfg = build_config(args, args.config_file)
@@ -199,6 +202,10 @@ def build_config(args=None, config_file=None):
     if args is not None:
         reset_config(cfg, args)
         cfg.merge_from_list(args.opts)
+
+    ################################
+    cfg.train.max_epoch = args.epoch
+    ################################
     # set parts information (number of parts K and each part name),
     # depending on the original loaded masks size or the transformation applied:
     compute_parts_num_and_names(cfg)

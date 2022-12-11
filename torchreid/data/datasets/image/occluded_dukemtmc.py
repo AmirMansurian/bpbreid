@@ -14,10 +14,12 @@ from ..dataset import ImageDataset
 
 class OccludedDuke(ImageDataset):
     dataset_dir = 'Occluded_Duke'
+    images_dir = 'images'
     masks_base_dir = 'masks'
+    external_annotation_base_dir = 'external_annotation'
 
     masks_dirs = {
-        # dir_name: (parts_num, masks_stack_size, contains_background_mask)
+        # dir_name: (masks_stack_size, contains_background_mask)
         'pifpaf': (36, False, '.jpg.confidence_fields.npy'),
         'pifpaf_maskrcnn_filtering': (36, False, '.jpg.confidence_fields.npy'),
         'isp_6_parts': (5, True, '.jpg.confidence_fields.npy', ["p{}".format(p) for p in range(1, 5+1)])
@@ -38,9 +40,9 @@ class OccludedDuke(ImageDataset):
             self.masks_parts_numbers, self.has_background, self.masks_suffix = None, None, None
         self.root = osp.abspath(osp.expanduser(root))
         self.dataset_dir = osp.join(self.root, self.dataset_dir)
-        self.train_dir = osp.join(self.dataset_dir, 'bounding_box_train')
-        self.query_dir = osp.join(self.dataset_dir, 'query')
-        self.gallery_dir = osp.join(self.dataset_dir, 'bounding_box_test')
+        self.train_dir = osp.join(self.dataset_dir, self.images_dir, 'bounding_box_train')
+        self.query_dir = osp.join(self.dataset_dir, self.images_dir, 'query')
+        self.gallery_dir = osp.join(self.dataset_dir, self.images_dir, 'bounding_box_test')
 
         required_files = [
             self.dataset_dir, self.train_dir, self.query_dir, self.gallery_dir

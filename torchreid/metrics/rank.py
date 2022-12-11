@@ -13,6 +13,78 @@ except ImportError:
         'unavailable, now use python evaluation.'
     )
 
+def eval_soccernetv3(distmat, q_pids, g_pids, q_action_indices, g_action_indices, max_rank):
+    """Evaluation with market1501 metric
+    """
+    num_q, num_g = distmat.shape
+
+    if num_g < max_rank:
+        max_rank = num_g
+        print(
+            'Note: number of gallery samples is quite small, got {}'.
+            format(num_g)
+        )
+
+    indices = np.argsort(distmat, axis=1)
+    #print(indices.shape)
+    #print(g_pids[indices].shape)
+    matches = (g_pids[indices] == q_pids[:, np.newaxis]).astype(np.int32)
+
+    # compute cmc curve for each query
+    all_cmc = []
+    all_AP = []
+    num_valid_q = 0. # number of valid query
+    smallest_ranking_size = max_rank
+
+    for q_idx in range(num_q):
+        # get query pid and action_idx
+        q_pid = q_pids[q_idx]
+        q_action_idx = q_action_indices[q_idx]
+
+        # remove gallery samples from different action than the query
+        order = indices[q_idx]
+        remove = (g_action_indices[order] != q_action_idx)
+        keep = np.invert(remove)
+
+        # compute cmc curve
+        raw_cmc = matches[q_idx][keep] # binary vector, positions with value 1 are correct matches
+
+        if not np.any(raw_cmc):
+            print("Does not appear in gallery: q_idx {} - q_pid {} - q_action_idx {}".format(q_idx, q_pid, q_action_idx))
+            # this condition is true when query identity does not appear in gallery
+            continue
+
+        cmc = raw_cmc.cumsum()
+
+        cmc[cmc > 1] = 1
+        cmc = cmc[:max_rank]
+
+
+        if smallest_ranking_size > cmc.size:
+            smallest_ranking_size = cmc.size
+
+        all_cmc.append(cmc)
+        num_valid_q += 1.
+
+        # compute average precision
+        # reference: https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)#Average_precision
+        num_rel = raw_cmc.sum()
+        tmp_cmc = raw_cmc.cumsum()
+        tmp_cmc = [x / (i+1.) for i, x in enumerate(tmp_cmc)]
+        tmp_cmc = np.asarray(tmp_cmc) * raw_cmc
+        AP = tmp_cmc.sum() / num_rel
+        all_AP.append(AP)
+
+    all_cmc = [np.concatenate((np.array(cmc[:smallest_ranking_size]), np.zeros(max_rank-smallest_ranking_size, dtype=np.int64)))
+               for cmc in all_cmc] # np.cat(cmc[:smallest_ranking_size], np.zeros(max_rank-smallest_ranking_size))
+    all_cmc = np.asarray(all_cmc).astype(np.float32)
+    cmc = all_cmc.sum(0) / num_valid_q  # size = 174
+    mAP = np.mean(all_AP)
+
+    return {
+        'cmc': cmc,
+        'mAP': mAP,
+    }
 
 def eval_cuhk03(distmat, q_pids, g_pids, q_camids, g_camids, max_rank):
     """Evaluation with cuhk03 metric
@@ -163,9 +235,12 @@ def evaluate_py(
     distmat, q_pids, g_pids, q_camids, g_camids, max_rank, eval_metric, q_anns=None, g_anns=None,
 ):
     if eval_metric == 'default':
-        return eval_market1501(distmat, q_pids, g_pids, q_camids, g_camids, max_rank)
+        #return eval_market1501(distmat, q_pids, g_pids, q_camids, g_camids, max_rank)
+        return eval_soccernetv3(distmat, q_pids, g_pids, q_camids, g_camids, max_rank)
     elif eval_metric == 'cuhk03':
         return eval_cuhk03(distmat, q_pids, g_pids, q_camids, g_camids, max_rank)
+    elif eval_metric == 'soccernetv3':
+        return eval_soccernetv3(distmat, q_pids, g_pids, q_camids, g_camids, max_rank)
     else:
         raise ValueError("Incorrect eval_metric value '{}'".format(eval_metric))
 
@@ -177,7 +252,7 @@ def evaluate_rank(
     q_camids,
     g_camids,
     max_rank=50,
-    eval_metric='default',
+    eval_metric='soccernetv3',
     q_anns=None,
     g_anns=None,
     use_cython=True

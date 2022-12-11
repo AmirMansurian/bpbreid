@@ -22,11 +22,13 @@ class Market1501(ImageDataset):
     """
     _junk_pids = [0, -1]
     dataset_dir = 'Market-1501-v15.09.15'
+    images_dir = 'images'
     masks_base_dir = 'masks'
+    external_annotation_base_dir = 'external_annotation'
     dataset_url = 'http://188.138.127.15:81/Datasets/Market-1501-v15.09.15.zip'
 
     masks_dirs = {
-        # dir_name: (parts_num, masks_stack_size, contains_background_mask)
+        # dir_name: (masks_stack_size, contains_background_mask)
         'pifpaf': (36, False, '.jpg.confidence_fields.npy'),
         'pifpaf_maskrcnn_filtering': (36, False, '.npy'),
     }
@@ -57,9 +59,9 @@ class Market1501(ImageDataset):
                 '"Market-1501-v15.09.15".'
             )
 
-        self.train_dir = osp.join(self.dataset_dir, 'bounding_box_train')
-        self.query_dir = osp.join(self.dataset_dir, 'query')
-        self.gallery_dir = osp.join(self.dataset_dir, 'bounding_box_test')
+        self.train_dir = osp.join(self.dataset_dir, self.images_dir, 'bounding_box_train')
+        self.query_dir = osp.join(self.dataset_dir, self.images_dir, 'query')
+        self.gallery_dir = osp.join(self.dataset_dir, self.images_dir, 'bounding_box_test')
         self.extra_gallery_dir = osp.join(self.dataset_dir, 'images')
         self.market1501_500k = market1501_500k
 
