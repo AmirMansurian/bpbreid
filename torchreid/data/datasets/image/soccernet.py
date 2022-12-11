@@ -19,7 +19,7 @@ class SoccerNet(ImageDataset):
     """Synergy Dataset.
     """
     _junk_pids = [0, -1]
-    dataset_dir = 'reid_dataset\Affiliation'
+    dataset_dir = 'reid_dataset'
     dataset_url = None
     masks_base_dir = 'masks'
     #eval_metric = 'soccernetv3'
