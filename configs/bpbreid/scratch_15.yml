@@ -47,7 +47,7 @@ model:
     last_stride: 1
     learnable_attention_enabled: False
     dim_reduce: 'after_pooling' # 'none', 'before_pooling', 'after_pooling', 'after_pooling_with_dropout'
-    dim_reduce_output: 512
+    dim_reduce_output: 128
     backbone: 'resnet50' # 'hrnet32' 'resnet50'
     test_embeddings: ['parts'] #  ['globl', 'foreg', 'parts']
     test_use_target_segmentation: 'none' # 'none' 'hard' 'soft'

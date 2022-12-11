@@ -4,6 +4,14 @@ import os.path as osp
 import os
 import numpy as np
 import time
+side_map_train = ['060', '061', '062', '063', '064', '065', '066', '067','068', '069', '070', '071', '072', '073', '074', '075',
+            '076', '077', '097', '098', '099', '100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '110',
+            '111', '112', '113', '114', '115', '151', '152', '153', '154', '155', '156', '157', '158', '159', '160', '161',
+            '162', '163', '164', '165', '166', '167', '168', '169', '170']
+
+side_map_test = ['116', '117', '118', '119', '120', '121', '122', '123', '124', '125', '126', '127', '128', '129', '130', '131',
+                 '132', '133', '134', '135', '136', '137', '138', '139', '140', '141', '142', '143', '144', '145', '146', '147',
+                 '148', '149', '150', '187', '188', '189', '190', '191', '192', '193', '194', '195', '196', '197', '198', '199', '200']
 
 from ..dataset import ImageDataset
 
@@ -11,7 +19,7 @@ class SoccerNet(ImageDataset):
     """Synergy Dataset.
     """
     _junk_pids = [0, -1]
-    dataset_dir = 'reid_dataset\ReID'
+    dataset_dir = 'reid_dataset\Affiliation'
     dataset_url = None
     masks_base_dir = 'masks'
     #eval_metric = 'soccernetv3'
@@ -84,6 +92,21 @@ class SoccerNet(ImageDataset):
             for img_path in img_paths:
                 pid = img_path.split('\\')[-1][:-4].split('_')[0]
                 camid = img_path.split('\\')[-1][:-4].split('_')[1]
+                side = img_path.split('\\')[-1][:-4].split('_')[-1]
+                if side == 'right':
+                    if mode == 1: pid = side_map_train.index(camid) * 2
+                    elif mode == 2: pid = side_map_test.index(camid) * 2
+                    else:
+                        if camid == '137' : continue
+                        else : pid = side_map_test.index(camid) * 2
+                elif side == 'left':
+                    if mode == 1: pid = side_map_train.index(camid) * 2 + 1
+                    elif mode == 2: pid = side_map_test.index(camid) * 2 + 1
+                    else:
+                        if camid == '137':continue
+                        else: pid = side_map_test.index(camid) * 2 + 1
+                else: continue
+
                 masks_path = self.infer_masks_path(img_path)
 
                 if (int(pid)) not in id_dict.keys():
@@ -97,11 +120,9 @@ class SoccerNet(ImageDataset):
                                 'camid': int(camid)})
 
         if mode == 1:
-            ids = list(set([i['pid'] for i in data]))
-            index = np.random.permutation(len(ids))[:10]
-            indice = [ids[j] for j in index]
+            indice = list(set([i['pid'] for i in data]))
             for player in indice:
-                idx = np.random.permutation(len(id_dict[player]))[:3]
+                idx = np.random.permutation(len(id_dict[player]))
                 data2 += [id_dict[player][f] for f in idx]
 
             for i, player in enumerate(data2):
@@ -111,25 +132,16 @@ class SoccerNet(ImageDataset):
             return data2, indice
 
         elif mode == 2:
-            ids = list(set([i['pid'] for i in data]))
-            index = np.random.permutation(len(ids))[:10]
-            indice = [ids[j] for j in index]
+            indice = list(set([i['pid'] for i in data]))
             for player in indice:
-                idx = np.random.permutation(len(id_dict[player]))[:6]
+                idx = np.random.permutation(len(id_dict[player]))[:30]
                 data2 += [id_dict[player][f] for f in idx]
-
-            for i, player in enumerate(data2):
-                idx = indice.index(player['pid'])
-                data2[i]['pid'] = idx
 
             return data2, indice
 
         elif mode == 3:
-            indice = list(set([i['pid'] for i in data if i['pid'] in mapping]))
+            indice = list(set([i['pid'] for i in data]))
             for player in indice:
                 data2 += id_dict[player]
-
-            for i, player in enumerate(data2):
-                data2[i]['pid'] = mapping.index(player['pid'])
 
             return data2, None
