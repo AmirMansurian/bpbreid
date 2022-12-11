@@ -15,10 +15,12 @@ from ..dataset import ImageDataset
 
 class PDukemtmcReid(ImageDataset):
     dataset_dir = 'P-DukeMTMC-reID'
+    images_dir = 'images'
     masks_base_dir = 'masks'
+    external_annotation_base_dir = 'external_annotation'
 
     masks_dirs = {
-        # dir_name: (parts_num, masks_stack_size, contains_background_mask)
+        # dir_name: (masks_stack_size, contains_background_mask)
         'pifpaf': (36, False, '.jpg.confidence_fields.npy'),
         'pifpaf_maskrcnn_filtering': (36, False, '.npy'),
     }
@@ -54,9 +56,9 @@ class PDukemtmcReid(ImageDataset):
                 'put data folders such as "bounding_box_train" under '
                 '"Market-1501-v15.09.15".'
             )
-        self.train_dir=osp.join(self.dataset_dir, 'train')
-        self.query_dir=osp.join(self.dataset_dir, 'test', 'occluded_body_images')
-        self.gallery_dir=osp.join(self.dataset_dir, 'test', 'whole_body_images')
+        self.train_dir=osp.join(self.dataset_dir, self.images_dir, 'train')
+        self.query_dir=osp.join(self.dataset_dir, self.images_dir, 'test', 'occluded_body_images')
+        self.gallery_dir=osp.join(self.dataset_dir, self.images_dir, 'test', 'whole_body_images')
 
         train = self.process_train_dir(self.train_dir, relabel=True)
         query = self.process_dir(self.query_dir, relabel=False)
