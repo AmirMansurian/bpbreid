@@ -90,9 +90,12 @@ class SoccerNet(ImageDataset):
 
             img_paths = glob.glob(osp.join(dir_path, '*.jpg'))
             for img_path in img_paths:
-                pid = img_path.split('/')[-1][:-4].split('_')[0]
-                camid = img_path.split('/')[-1][:-4].split('_')[1]
-                side = img_path.split('/')[-1][:-4].split('_')[-1]
+                pid = img_path.split('\\')[-1][:-4].split('_')[0]
+                camid = img_path.split('\\')[-1][:-4].split('_')[1]
+                game_id = img_path.split('\\')[-1][:-4].split('_')[-2]
+                role, side = img_path.split('\\')[-1][:-4].split('_')[-1].split('-')
+               
+                if role != 'player': continue        
                 if side == 'right':
                     if mode == 1: pid = side_map_train.index(camid) * 2
                     elif mode == 2: pid = side_map_test.index(camid) * 2
