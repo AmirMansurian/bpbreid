@@ -397,7 +397,7 @@ class ImagePartBasedEngine(Engine):
         return imgs, masks, pids, team_id, camids
 
     def extract_test_embeddings(self, model_output):
-        embeddings, visibility_scores, id_cls_scores, pixels_cls_scores, spatial_features, parts_masks = model_output
+        embeddings, visibility_scores, id_cls_scores, team_cls_score, pixels_cls_scores, spatial_features, parts_masks = model_output
         embeddings_list = []
         visibility_scores_list = []
         embeddings_masks_list = []
