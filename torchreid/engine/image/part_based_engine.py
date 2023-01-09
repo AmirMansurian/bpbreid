@@ -75,11 +75,11 @@ class ImagePartBasedEngine(Engine):
         self.optimizer_timer = self.writer.optimizer_timer
 
     def forward_backward(self, data):
-        imgs, target_masks, pids, imgs_path = self.parse_data_for_train(data)
+        imgs, target_masks, pids, team_ids, imgs_path = self.parse_data_for_train(data)
 
         # feature extraction
         self.feature_extraction_timer.start()
-        embeddings_dict, visibility_scores_dict, id_cls_scores_dict, pixels_cls_scores, spatial_features, masks \
+        embeddings_dict, visibility_scores_dict, id_cls_scores_dict, team_id_cls_scores_dict, pixels_cls_scores, spatial_features, masks \
             = self.model(imgs, external_parts_masks=target_masks)
         display_feature_maps(embeddings_dict, spatial_features, masks[PARTS], imgs_path, pids)
         self.feature_extraction_timer.stop()
@@ -89,7 +89,9 @@ class ImagePartBasedEngine(Engine):
         loss, loss_summary = self.combine_losses(visibility_scores_dict,
                                                  embeddings_dict,
                                                  id_cls_scores_dict,
+                                                 team_id_cls_scores_dict,
                                                  pids,
+                                                 team_ids,
                                                  pixels_cls_scores,
                                                  target_masks,
                                                  bpa_weight=self.losses_weights[PIXELS]['ce'])
@@ -104,10 +106,18 @@ class ImagePartBasedEngine(Engine):
 
         return loss, loss_summary
 
-    def combine_losses(self, visibility_scores_dict, embeddings_dict, id_cls_scores_dict, pids, pixels_cls_scores=None, target_masks=None, bpa_weight=0):
+    def combine_losses(self, visibility_scores_dict, embeddings_dict, id_cls_scores_dict, team_id_cls_scores_dict, pids,
+                       team_ids, pixels_cls_scores=None, target_masks=None, bpa_weight=0):
+
         # 1. ReID objective:
         # GiLt loss on holistic and part-based embeddings
-        loss, loss_summary = self.GiLt(embeddings_dict, visibility_scores_dict, id_cls_scores_dict, pids)
+        reid_loss, reid_loss_summary = self.GiLt(embeddings_dict, visibility_scores_dict, id_cls_scores_dict, pids)
+        loss_summary = reid_loss_summary
+        # 1. Team affiliation objective:
+        # GiLt loss on holistic and part-based embeddings
+        team_loss, team_loss_summary = self.GiLt(embeddings_dict, visibility_scores_dict, team_id_cls_scores_dict, team_ids)
+
+        loss = reid_loss + team_loss
 
         # 2. Part prediction objective:
         # Body part attention loss on spatial feature map
@@ -125,14 +135,14 @@ class ImagePartBasedEngine(Engine):
             # compute the classification loss for each pixel
             bpa_loss, bpa_loss_summary = self.body_part_attention_loss(pixels_cls_scores, pixels_cls_score_targets)
             loss += bpa_weight * bpa_loss
-            loss_summary = {**loss_summary, **bpa_loss_summary}
+            loss_summary = {**reid_loss_summary, **bpa_loss_summary}
 
         return loss, loss_summary
 
     def _feature_extraction(self, data_loader):
-        f_, pids_, camids_, parts_visibility_, p_masks_, pxl_scores_, anns = [], [], [], [], [], [], []
+        f_, pids_, team_ids_, camids_, parts_visibility_, p_masks_, pxl_scores_, anns = [], [], [], [], [], [], [], []
         for batch_idx, data in enumerate(tqdm(data_loader, desc=f'Batches processed')):
-            imgs, masks, pids, camids = self.parse_data_for_eval(data)
+            imgs, masks, pids, team_ids, camids = self.parse_data_for_eval(data)
             if self.use_gpu:
                 if masks is not None:
                     masks = masks.cuda()
@@ -153,6 +163,7 @@ class ImagePartBasedEngine(Engine):
             p_masks_.append(parts_masks)
             pxl_scores_.append(pixels_cls_scores)
             pids_.extend(pids)
+            team_ids_.extend(team_ids)
             camids_.extend(camids)
             anns.append(data)
         if self.mask_filtering_testing:
@@ -161,9 +172,10 @@ class ImagePartBasedEngine(Engine):
         p_masks_ = torch.cat(p_masks_, 0)
         pxl_scores_ = torch.cat(pxl_scores_, 0) if pxl_scores_[0] is not None else None
         pids_ = np.asarray(pids_)
+        team_ids_ = np.asarray(team_ids_)
         camids_ = np.asarray(camids_)
         anns = collate(anns)
-        return f_, pids_, camids_, parts_visibility_, p_masks_, pxl_scores_, anns
+        return f_, pids_, team_ids_, camids_, parts_visibility_, p_masks_, pxl_scores_, anns
 
     @torch.no_grad()
     def _evaluate(
@@ -185,11 +197,11 @@ class ImagePartBasedEngine(Engine):
         save_features=False
     ):
         print('Extracting features from query set ...')
-        qf, q_pids, q_camids, qf_parts_visibility, q_parts_masks, q_pxl_scores_, q_anns = self._feature_extraction(query_loader)
+        qf, q_pids, q_team_ids, q_camids, qf_parts_visibility, q_parts_masks, q_pxl_scores_, q_anns = self._feature_extraction(query_loader)
         print('Done, obtained {} tensor'.format(qf.shape))
 
         print('Extracting features from gallery set ...')
-        gf, g_pids, g_camids, gf_parts_visibility, g_parts_masks, g_pxl_scores_, g_anns = self._feature_extraction(gallery_loader)
+        gf, g_pids, g_team_ids, g_camids, gf_parts_visibility, g_parts_masks, g_pxl_scores_, g_anns = self._feature_extraction(gallery_loader)
         print('Done, obtained {} tensor'.format(gf.shape))
 
         print('Test batch feature extraction speed: {:.4f} sec/batch'.format(self.writer.test_batch_timer.avg))
@@ -227,7 +239,26 @@ class ImagePartBasedEngine(Engine):
 
         eval_metric = self.datamanager.test_loader[dataset_name]['query'].dataset.eval_metric
 
-        print('Computing CMC and mAP ...')
+        print('Computing CMC and mAP for Team Affiliation...')
+        eval_metrics = metrics.evaluate_rank(
+            distmat,
+            q_team_ids,
+            g_team_ids,
+            q_camids,
+            g_camids,
+            q_anns=q_anns,
+            g_anns=g_anns,
+            eval_metric=eval_metric
+        )
+        mAP = eval_metrics['mAP']
+        cmc = eval_metrics['cmc']
+        print('** Results **')
+        print('mAP: {:.2%}'.format(mAP))
+        print('CMC curve')
+        for r in ranks:
+            print('Rank-{:<3}: {:.2%}'.format(r, cmc[r - 1]))
+
+        print('Computing CMC and mAP for ReID...')
         eval_metrics = metrics.evaluate_rank(
             distmat,
             q_pids,
@@ -343,24 +374,27 @@ class ImagePartBasedEngine(Engine):
         imgs_path = data['img_path']
         masks = data['mask'] if 'mask' in data else None
         pids = data['pid']
+        team_ids = data['team_id']
 
         if self.use_gpu:
             imgs = imgs.cuda()
             if masks is not None:
                 masks = masks.cuda()
             pids = pids.cuda()
+            team_ids = team_ids.cuda()
 
         if masks is not None:
             assert masks.shape[1] == (self.config.model.bpbreid.masks.parts_num + 1)
 
-        return imgs, masks, pids, imgs_path
+        return imgs, masks, pids, team_ids, imgs_path
 
     def parse_data_for_eval(self, data):
         imgs = data['image']
         masks = data['mask'] if 'mask' in data else None
         pids = data['pid']
+        team_id = data['team_id']
         camids = data['camid']
-        return imgs, masks, pids, camids
+        return imgs, masks, pids, team_id, camids
 
     def extract_test_embeddings(self, model_output):
         embeddings, visibility_scores, id_cls_scores, pixels_cls_scores, spatial_features, parts_masks = model_output
