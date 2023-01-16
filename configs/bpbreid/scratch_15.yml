@@ -24,7 +24,7 @@ data:
     min_overlap: 0.2
     max_overlap: 0.8
 
-  save_dir: 'outputs'
+  save_dir: 'kaggle/working/'
   workers: 0
 
 sampler:
