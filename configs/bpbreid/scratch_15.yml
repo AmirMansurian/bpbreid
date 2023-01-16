@@ -6,7 +6,7 @@ project:
     use_neptune: False
     use_tensorboard: False
     matplotlib_show: False
-    use_wandb: True
+    use_wandb: False
 
 data:
   root: '/kaggle/working/'
