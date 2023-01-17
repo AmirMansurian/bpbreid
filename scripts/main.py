@@ -178,6 +178,7 @@ def main():
     args = parser.parse_args()
 
     cfg = build_config(args, args.config_file)
+    cfg.data.save_dir = '../'
 
     engine, model = build_torchreid_model_engine(cfg)
     print('Starting experiment {} with job id {} and creation date {}'.format(cfg.project.experiment_id,
