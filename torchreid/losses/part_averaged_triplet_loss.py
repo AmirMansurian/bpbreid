@@ -93,6 +93,10 @@ class PartAveragedTripletLoss(nn.Module):
         return distances
 
     def _hard_mine_triplet_loss(self, batch_pairwise_dist, labels, margin):
+        print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
+        print(batch_pairwise_dist)
+        print(labels)
+        print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
         """
         A generic implementation of the batch-hard triplet loss.
         K (part-based) distance matrix between N samples are provided in tensor 'batch_pairwise_dist' of size [K, N, N].
