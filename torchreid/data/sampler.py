@@ -187,6 +187,7 @@ def build_train_sampler(
     elif train_sampler == 'RandomSampler':
         sampler = RandomSampler(data_source)
 
-    sampler = RandomIdentityAndTeamSampler(data_source, 36, 3, 4)
+    #sampler = RandomIdentityAndTeamSampler(data_source, 36, 3, 4)
+    sampler = RandomIdentityAndTeamSampler(data_source, 64, 4, 4)
 
     return sampler
