@@ -94,7 +94,7 @@ class PartAveragedTripletLoss(nn.Module):
 
     def _hard_mine_triplet_loss(self, batch_pairwise_dist, labels, margin):
         print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
-        print(batch_pairwise_dist)
+        print(batch_pairwise_dist.shape)
         print(labels)
         print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
         """
