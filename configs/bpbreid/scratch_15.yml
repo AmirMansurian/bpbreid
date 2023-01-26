@@ -30,7 +30,7 @@ data:
 sampler:
   train_sampler: RandomIdentitySampler # sampler for source train loader
   train_sampler_t: RandomIdentitySampler # sampler for target train loader
-  num_instances: 3 # number of instances per identity for RandomIdentitySampler
+  num_instances: 4 # number of instances per identity for RandomIdentitySampler
 
 model:
   name: 'bpbreid'
@@ -82,7 +82,7 @@ loss:
         ce: 0.
 
 train:
-  batch_size: 30
+  batch_size: 64
   eval_freq: 5
   start_epoch: 0
   max_epoch: 20
