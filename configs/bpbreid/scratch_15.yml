@@ -84,8 +84,8 @@ loss:
 train:
   batch_size: 64
   eval_freq: 5
-  start_epoch: 0
-  max_epoch: 20
+  start_epoch: 1
+  max_epoch: 100
   optim: 'adam' # 'adam', 'amsgrad', 'sgd', 'rmsprop', 'radam'
   lr: 0.00035
   lr_scheduler: 'single_step' # 'single_step' 'multi_step' 'cosine'
