@@ -120,7 +120,8 @@ class SoccerNet(ImageDataset):
                 if (int(pid)) not in id_dict.keys():
                     id_dict[int(pid)] = []
 
-                id_dict[int(pid)].append({'img_path': img_path, 'pid': int(pid), 'masks_path': masks_path, 'camid': int(camid), 'team_id': team_id})
+                id_dict[int(pid)].append({'img_path': img_path, 'pid': int(pid), 'masks_path': masks_path,
+                                          'camid': int(camid), 'team_id': int(team_id), 'gameid': int(game_id), 'role': role})
 
                 data.append({'img_path': img_path,
                                 'pid': int(pid),
@@ -144,13 +145,6 @@ class SoccerNet(ImageDataset):
             return data2, indice
 
         elif mode == 2:
-            #indice = list(set([i['pid'] for i in data]))
-            #for player in indice:
-                #idx = np.random.permutation(len(id_dict[player]))
-                #data2 += [id_dict[player][f] for f in idx]
-
-            #return data2, indice
-
             ids = list(set([i['pid'] for i in data]))[:350]
             index = np.random.permutation(len(ids))
             indice = [ids[j] for j in index]
@@ -165,12 +159,6 @@ class SoccerNet(ImageDataset):
             return data2, indice
 
         elif mode == 3:
-            #indice = list(set([i['pid'] for i in data]))
-            #for player in indice:
-                #data2 += id_dict[player]
-
-            #return data2, None
-
             indice = list(set([i['pid'] for i in data]))
             indice = [i for i in indice if i in mapping]
             for player in indice:
