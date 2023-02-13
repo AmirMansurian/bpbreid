@@ -6,6 +6,8 @@ import numpy as np
 from tabulate import tabulate
 from torch import nn
 from tqdm import tqdm
+from pathlib import Path
+import pickle
 
 from ..engine import Engine
 from ... import metrics
@@ -140,9 +142,9 @@ class ImagePartBasedEngine(Engine):
         return loss, loss_summary
 
     def _feature_extraction(self, data_loader):
-        f_, pids_, team_ids_, camids_, parts_visibility_, p_masks_, pxl_scores_, anns = [], [], [], [], [], [], [], []
+        f_, pids_, team_ids_, camids_, gids_, roles_, parts_visibility_, p_masks_, pxl_scores_, anns = [], [], [], [], [], [], [], [], [], []
         for batch_idx, data in enumerate(tqdm(data_loader, desc=f'Batches processed')):
-            imgs, masks, pids, team_ids, camids = self.parse_data_for_eval(data)
+            imgs, masks, pids, team_ids, camids, gids, roles = self.parse_data_for_eval(data)
             if self.use_gpu:
                 if masks is not None:
                     masks = masks.cuda()
@@ -165,6 +167,8 @@ class ImagePartBasedEngine(Engine):
             pids_.extend(pids)
             team_ids_.extend(team_ids)
             camids_.extend(camids)
+            gids_.extend(gids)
+            roles_.extend(roles)
             anns.append(data)
         if self.mask_filtering_testing:
             parts_visibility_ = torch.cat(parts_visibility_, 0)
@@ -174,8 +178,10 @@ class ImagePartBasedEngine(Engine):
         pids_ = np.asarray(pids_)
         team_ids_ = np.asarray(team_ids_)
         camids_ = np.asarray(camids_)
+        gids_ = np.asarray(gids_)
+        roles_ = np.asarray(roles_)
         anns = collate(anns)
-        return f_, pids_, team_ids_, camids_, parts_visibility_, p_masks_, pxl_scores_, anns
+        return f_, pids_, team_ids_, camids_, gids_, roles_, parts_visibility_, p_masks_, pxl_scores_, anns
 
     @torch.no_grad()
     def _evaluate(
@@ -197,21 +203,25 @@ class ImagePartBasedEngine(Engine):
         save_features=False
     ):
         print('Extracting features from query set ...')
-        qf, q_pids, q_team_ids, q_camids, qf_parts_visibility, q_parts_masks, q_pxl_scores_, q_anns = self._feature_extraction(query_loader)
+        qf, q_pids, q_team_ids, q_camids, q_gids, q_roles, qf_parts_visibility, q_parts_masks, q_pxl_scores_, q_anns = self._feature_extraction(query_loader)
         print('Done, obtained {} tensor'.format(qf.shape))
 
         print('Extracting features from gallery set ...')
-        gf, g_pids, g_team_ids, g_camids, gf_parts_visibility, g_parts_masks, g_pxl_scores_, g_anns = self._feature_extraction(gallery_loader)
+        gf, g_pids, g_team_ids, g_camids, g_gids, g_roles, gf_parts_visibility, g_parts_masks, g_pxl_scores_, g_anns = self._feature_extraction(gallery_loader)
         print('Done, obtained {} tensor'.format(gf.shape))
 
         print('Test batch feature extraction speed: {:.4f} sec/batch'.format(self.writer.test_batch_timer.avg))
 
         if save_features:
+            dict = {'query': {'features': qf, 'pids': q_pids, 'tids': q_team_ids, 'cids': q_camids, 'gids': q_gids, 'roles': q_roles},
+                    'gallery': {'features': gf, 'pids': g_pids, 'tids': g_team_ids}, 'cids': g_camids, 'gids': g_gids, 'roles': g_roles}
             features_dir = osp.join(save_dir, 'features')
             print('Saving features to : ' + features_dir)
             # TODO create if doesn't exist
-            torch.save(gf, osp.join(features_dir, 'gallery_features_' + dataset_name + '.pt'))
-            torch.save(qf, osp.join(features_dir, 'query_features_' + dataset_name + '.pt'))
+            Path(features_dir).mkdir(parents=True, exist_ok=True)
+
+            with open('extracted_feats.pkl', 'wb') as handle:
+                pickle.dump(dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
             # save pids, camids and feature length
 
         self.writer.performance_evaluation_timer.start()
@@ -394,7 +404,9 @@ class ImagePartBasedEngine(Engine):
         pids = data['pid']
         team_id = data['team_id']
         camids = data['camid']
-        return imgs, masks, pids, team_id, camids
+        game_id = data['gameid']
+        role = data['role']
+        return imgs, masks, pids, team_id, camids, game_id, role
 
     def extract_test_embeddings(self, model_output):
         embeddings, visibility_scores, id_cls_scores, team_cls_score, pixels_cls_scores, spatial_features, parts_masks = model_output
