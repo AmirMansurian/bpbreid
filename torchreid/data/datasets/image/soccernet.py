@@ -145,8 +145,8 @@ class SoccerNet(ImageDataset):
             return data2, indice
 
         elif mode == 2:
-            ids = list(set([i['pid'] for i in data]))[:350]
-            index = np.random.permutation(len(ids))
+            ids = list(set([i['pid'] for i in data]))
+            index = np.random.permutation(len(ids))[:350]
             indice = [ids[j] for j in index]
             for player in indice:
                 idx = np.random.permutation(len(id_dict[player]))[:10]
