@@ -34,8 +34,8 @@ sampler:
 
 model:
   name: 'bpbreid'
-  pretrained: True
-  load_weights: '/kaggle/working/job-81436263_100_model.pth.tar'
+  pretrained: False
+  load_weights: ''
   save_model_flag: True
   bpbreid:
     pooling: 'gwap'
