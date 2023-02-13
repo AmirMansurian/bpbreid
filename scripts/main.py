@@ -3,6 +3,7 @@ import argparse
 import torch
 import torch.nn as nn
 import torchreid
+import pathlib
 from tools.extract_part_based_features import extract_reid_features
 from torchreid.data.masks_transforms import compute_parts_num_and_names
 from torchreid.utils import (
@@ -188,9 +189,9 @@ def main():
     print(
         'End of experiment {} with job id {} and creation date {}'.format(cfg.project.experiment_id, cfg.project.job_id,
                                                                           cfg.project.start_time))
-    if cfg.inference.enabled:
-        print("Starting inference on external data")
-        extract_reid_features(cfg, cfg.inference.input_folder, cfg.data.save_dir, model)
+    #if cfg.inference.enabled:
+       # print("Starting inference on external data")
+        #extract_reid_features(cfg, cfg.inference.input_folder, cfg.data.save_dir, model)
 
 
 def build_config(args=None, config_file=None):
