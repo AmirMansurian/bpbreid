@@ -119,8 +119,9 @@ class ImagePartBasedEngine(Engine):
         # GiLt loss on holistic and part-based embeddings
         team_loss, team_loss_summary = self.GiLt(embeddings_dict, visibility_scores_dict, team_id_cls_scores_dict, team_ids)
 
-        loss = reid_loss + team_loss
-
+        ######################################
+        loss = reid_loss 
+        ######################################
         # 2. Part prediction objective:
         # Body part attention loss on spatial feature map
         if pixels_cls_scores is not None\
@@ -214,7 +215,7 @@ class ImagePartBasedEngine(Engine):
 
         if save_features:
             dict = {'query': {'features': qf, 'pids': q_pids, 'tids': q_team_ids, 'cids': q_camids, 'gids': q_gids, 'roles': q_roles},
-                    'gallery': {'features': gf, 'pids': g_pids, 'tids': g_team_ids}, 'cids': g_camids, 'gids': g_gids, 'roles': g_roles}
+                    'gallery': {'features': gf, 'pids': g_pids, 'tids': g_team_ids, 'cids': g_camids, 'gids': g_gids, 'roles': g_roles}}
             features_dir = osp.join(save_dir, 'features')
             print('Saving features to : ' + features_dir)
             # TODO create if doesn't exist
