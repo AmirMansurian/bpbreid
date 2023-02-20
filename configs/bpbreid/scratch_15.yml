@@ -4,7 +4,7 @@ project:
   logger:
     use_clearml: False
     use_neptune: False
-    use_tensorboard: False
+    use_tensorboard: True
     matplotlib_show: False
     use_wandb: False
 
@@ -104,7 +104,7 @@ test:
   save_features: True
   visrank: True
   visrank_per_body_part: False
-  vis_embedding_projection: False
+  vis_embedding_projection: True
   vis_feature_maps: False
   visrank_topk: 10
   visrank_count: 2
