@@ -84,7 +84,7 @@ loss:
 train:
   batch_size: 64
   eval_freq: 5
-  start_epoch: 100
+  start_epoch: 99
   max_epoch: 200
   optim: 'adam' # 'adam', 'amsgrad', 'sgd', 'rmsprop', 'radam'
   lr: 0.00035
