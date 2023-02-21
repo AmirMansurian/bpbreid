@@ -33,7 +33,9 @@ def extract_samples(features, dataset, sample_size):
     meta = []
     imgs = []
     for idx in idx_list:
-        _, pid, camid, img_path, masks = dataset[idx]
+        #_, pid, camid, img_path, masks = dataset[idx]
+        pid = dataset[idx]['pid']
+        img_path = dataset[idx]['img_path']
         embeddings.append(features[idx, :, :])
         img = cv2.imread(img_path)
         img = cv2.resize(img, (64, 64))
