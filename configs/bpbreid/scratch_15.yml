@@ -34,8 +34,8 @@ sampler:
 
 model:
   name: 'bpbreid'
-  pretrained: False
-  load_weights: ''
+  pretrained: True
+  load_weights: '/kaggle/working/job-232029019_100_model.pth.tar'
   save_model_flag: True
   bpbreid:
     pooling: 'gwap'
@@ -84,8 +84,8 @@ loss:
 train:
   batch_size: 64
   eval_freq: 50
-  start_epoch: 0
-  max_epoch: 100
+  start_epoch: 100
+  max_epoch: 200
   optim: 'adam' # 'adam', 'amsgrad', 'sgd', 'rmsprop', 'radam'
   lr: 0.00035
   lr_scheduler: 'single_step' # 'single_step' 'multi_step' 'cosine'
