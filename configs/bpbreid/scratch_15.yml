@@ -4,7 +4,7 @@ project:
   logger:
     use_clearml: False
     use_neptune: False
-    use_tensorboard: False
+    use_tensorboard: True
     matplotlib_show: False
     use_wandb: False
 
@@ -35,7 +35,7 @@ sampler:
 model:
   name: 'bpbreid'
   pretrained: True
-  load_weights: '/kaggle/working/job-232029019_100_model.pth.tar'
+  load_weights: '/kaggle/working/job-354323968_200_model.pth.tar'
   save_model_flag: True
   bpbreid:
     pooling: 'gwap'
@@ -100,11 +100,11 @@ test:
   batch_size_pairwise_dist_matrix: 5000
   normalize_feature: True
   dist_metric: 'cosine' # distance metric, ['euclidean', 'cosine']
-  evaluate: False # test only
+  evaluate: True # test only
   save_features: True
   visrank: True
   visrank_per_body_part: False
-  vis_embedding_projection: False
+  vis_embedding_projection: True
   vis_feature_maps: False
   visrank_topk: 10
   visrank_count: 2
