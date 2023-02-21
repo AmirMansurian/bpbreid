@@ -219,8 +219,6 @@ class ImagePartBasedEngine(Engine):
             features_dir = osp.join(save_dir, 'features')
             print('Saving features to : ' + features_dir)
             # TODO create if doesn't exist
-            Path(features_dir).mkdir(parents=True, exist_ok=True)
-
             with open('extracted_feats.pkl', 'wb') as handle:
                 pickle.dump(dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
             # save pids, camids and feature length
