@@ -32,6 +32,13 @@ class SoccerNet(ImageDataset):
         # dir_name: (masks_stack_size, contains_background_mask)
         'pifpaf': (36, False, '.confidence_fields.npy')
     }
+    
+    def gallery_filter(self, q_pid, q_camid, q_ann, g_pids, g_camids, g_anns):
+        """ Remove gallery samples that have the same pid and camid as the query sample, since ReID is a cross-camera
+        person retrieval task for most datasets. However, we still keep samples from the same camera but of different
+        identity as distractors."""
+        remove = (g_camids != q_camid)
+        return remove
 
     @staticmethod
     def get_masks_config(masks_dir):
