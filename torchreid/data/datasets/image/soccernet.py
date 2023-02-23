@@ -107,7 +107,7 @@ class SoccerNet(ImageDataset):
                 role, side = img_path.split('/')[-1][:-4].split('_')[-1].split('-')
 
                 if role != 'player': continue
-                if game_id != '7': continue
+                #if game_id != '7': continue
 
                 team_id = 0
                 if side == 'right': team_id = 1
