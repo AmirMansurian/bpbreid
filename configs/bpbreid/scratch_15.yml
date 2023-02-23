@@ -34,7 +34,7 @@ sampler:
 
 model:
   name: 'bpbreid'
-  pretrained: False
+  pretrained: True
   load_weights: '/kaggle/working/job-354323968_200_model.pth.tar'
   save_model_flag: True
   bpbreid:
@@ -100,7 +100,7 @@ test:
   batch_size_pairwise_dist_matrix: 5000
   normalize_feature: True
   dist_metric: 'cosine' # distance metric, ['euclidean', 'cosine']
-  evaluate: False # test only
+  evaluate: True # test only
   save_features: True
   visrank: True
   visrank_per_body_part: False
