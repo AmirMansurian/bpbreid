@@ -120,7 +120,7 @@ class ImagePartBasedEngine(Engine):
         team_loss, team_loss_summary = self.GiLt(embeddings_dict, visibility_scores_dict, team_id_cls_scores_dict, team_ids)
 
         ######################################
-        loss = reid_loss + team_loss
+        loss = team_loss
         ######################################
         # 2. Part prediction objective:
         # Body part attention loss on spatial feature map
