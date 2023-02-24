@@ -35,7 +35,7 @@ sampler:
 model:
   name: 'bpbreid'
   pretrained: True
-  load_weights: '../job-472715141_100_model.pth.tar'
+  load_weights: '../job-81436263_100_model.pth.tar'
   save_model_flag: True
   bpbreid:
     pooling: 'gwap'
